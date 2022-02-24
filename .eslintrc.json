@@ -1,0 +1,62 @@
+{
+  "root": true,
+  "env": {
+    "commonjs": true,
+    "es6": true,
+    "node": true,
+    "jest": true
+  },
+  "extends": ["eslint:recommended", "plugin:node/recommended", "plugin:security/recommended", "plugin:import/errors"],
+  "plugins": ["security"],
+  "parser": "@babel/eslint-parser",
+  "parserOptions": {
+    "ecmaVersion": 2018
+  },
+  "rules": {
+    "curly": ["error"],
+    "eqeqeq": ["error", "always", { "null": "ignore" }],
+    "import/extensions": ["error", "never", { "json": "always", "js": "ignore" }],
+    "import/first": "error",
+    "import/no-duplicates": "error",
+    "import/no-useless-path-segments": "error",
+    "import/order": [
+      "error",
+      {
+        "groups": ["builtin", "external", "internal", "parent", "sibling", "index"],
+        "pathGroups": [
+          {
+            "pattern": "#tokens/**",
+            "group": "internal"
+          },
+          {
+            "pattern": "#libs/**",
+            "group": "internal"
+          },
+          {
+            "pattern": "#common/**",
+            "group": "internal"
+          },
+          {
+            "pattern": "#common-backend/**",
+            "group": "internal"
+          }
+        ]
+      }
+    ],
+    "no-constant-condition": "off",
+    "no-template-curly-in-string": "error",
+    "no-var": "error",
+    "no-nested-ternary": "error",
+    "node/no-missing-import": "off",
+    "node/no-unsupported-features/es-syntax": ["error", { "ignores": ["dynamicImport", "modules"] }],
+    "object-shorthand": ["error", "never"],
+    "one-var": ["error", "never"],
+    "prefer-const": "error",
+    "prefer-template": "error",
+    "security/detect-object-injection": "off"
+  },
+  "settings": {
+    "import/external-module-folders": ["node_modules"],
+    "failOnWarning": true
+  }
+}
