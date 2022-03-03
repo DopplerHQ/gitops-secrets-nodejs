@@ -1,6 +1,6 @@
 // eslint-disable-next-line security/detect-child-process
 const { spawnSync } = require("child_process");
-const doppler = require("../src/providers/doppler");
+const doppler = require("../src/providers/doppler/index");
 
 // Store service token so it can be removed and restored during tests
 const DOPPLER_TOKEN = process.env.DOPPLER_TOKEN;
@@ -11,7 +11,7 @@ beforeAll(() => {
   }
 
   if (!process.env.DOPPLER_TOKEN) {
-    throw `Doppler CLI auth check failed: The 'DOPPLER_SERVICE_TOKEN' environment variable is required`;
+    throw `Doppler CLI auth check failed: The 'DOPPLER_TOKEN' environment variable is required`;
   }
 
   const secretsCheck = spawnSync("doppler", ["secrets"]);
@@ -21,44 +21,44 @@ beforeAll(() => {
 });
 
 test("CLI fails without valid format", () => {
-  expect(() => doppler.fetchCLI("aaa")).toThrow();
+  expect(() => doppler.cli.download("aaa")).toThrow();
 });
 
 test("CLI succeeds with valid format", () => {
-  expect(doppler.fetchCLI("json")).toBeTruthy();
+  expect(doppler.cli.download("json")).toBeTruthy();
 });
 
-test("fetchAPI fails without DOPPLER_TOKEN environment variable", async () => {
+test("API fails without DOPPLER_TOKEN environment variable", async () => {
   delete process.env.DOPPLER_TOKEN;
-  await expect(doppler.fetchAPI()).rejects.toContain("Doppler API Error");
+  await expect(doppler.api.download()).rejects.toContain("Doppler API Error");
   process.env.DOPPLER_TOKEN = DOPPLER_TOKEN;
 });
 
-test("fetchAPI fails with invalid format", async () => {
-  await expect(doppler.fetchAPI("aaa")).rejects.toContain("Invalid format");
+test("API fails with invalid format", async () => {
+  await expect(doppler.api.download("aaa")).rejects.toContain("'format' must be one of");
 });
 
-test("fetchAPI succeeds with valid format and DOPPLER_TOKEN environment variable", async () => {
-  await expect(doppler.fetchAPI("yaml")).resolves.toContain("DOPPLER_PROJECT");
+test("API succeeds with valid format and DOPPLER_TOKEN environment variable", async () => {
+  await expect(doppler.api.download("yaml")).resolves.toContain("DOPPLER_PROJECT");
 });
 
-test("fetchAsScript fails without DOPPLER_TOKEN environment variable", async () => {
+test("fetchAsync fails without DOPPLER_TOKEN environment variable", async () => {
   delete process.env.DOPPLER_TOKEN;
-  const stdio = await doppler.fetchAsScript();
+  const stdio = await doppler.fetchAsync();
   expect(stdio.stderr).toContain("'DOPPLER_TOKEN' environment variable is required");
   process.env.DOPPLER_TOKEN = DOPPLER_TOKEN;
 });
 
-test("fetchAsScript ignores with invalid format", async () => {
+test("fetchAsync ignores with invalid format", async () => {
   const PROCESS_ARGV = [...process.argv];
   process.argv = ["", "", "--format", "aaa"];
-  const stdio = await doppler.fetchAsScript();
+  const stdio = await doppler.fetchAsync();
   expect(stdio.stderr).toBe(null);
   process.argv = PROCESS_ARGV;
 });
 
-test("fetchAsScript succeeds with valid format and DOPPLER_TOKEN environment variable", async () => {
-  const stdio = await doppler.fetchAsScript();
+test("fetchAsync succeeds with valid format and DOPPLER_TOKEN environment variable", async () => {
+  const stdio = await doppler.fetchAsync();
   expect(stdio.stdout).toContain("DOPPLER_PROJECT");
 });
 
@@ -74,6 +74,6 @@ test("fetch fails without DOPPLER_TOKEN environment variable ", () => {
   process.env.DOPPLER_TOKEN = DOPPLER_TOKEN;
 });
 
-test("fetch ignores invalid format and falls back to JSON", () => {
-  expect(JSON.parse(doppler.fetch("aaa"))).toHaveProperty("DOPPLER_PROJECT");
+test("fetch fails with invalid format", () => {
+  expect(() => doppler.fetch("aaa")).toThrow();
 });

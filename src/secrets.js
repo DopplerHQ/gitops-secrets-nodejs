@@ -1,8 +1,4 @@
 const crypto = require("crypto");
-const fs = require("fs");
-const path = require("path");
-const dotenv = require("dotenv");
-const { log } = require("./utils.js");
 
 const PBKDF2_ROUNDS = 50000;
 const PBKDF2_KEYLEN = 32;
@@ -44,36 +40,6 @@ function encrypt(secrets) {
 }
 
 /**
- * Encrypt contents to a file
- * @param {string} encryptedFile
- * @param {string} secrets
- */
-function encryptToFile(encryptedFile, secrets) {
-  writeFileContents(encryptedFile, encrypt(secrets), "encrypted");
-}
-
-/**
- * Encrypt a file. Overwrites the unencrypted file if the encryptedFile is not supplied.
- * @param {string} unencryptedFile
- * @param {string} [encryptedFile]
- */
-function encryptFile(unencryptedFile, encryptedFile) {
-  encryptedFile = encryptedFile || unencryptedFile;
-
-  try {
-    const fileContents = readFileContents(unencryptedFile, "unencrypted");
-    const encryptedSecrets = encrypt(fileContents);
-    writeFileContents(encryptedFile, encryptedSecrets, "encrypted");
-  } catch (error) {
-    log(`Unable to encrypt ${unencryptedFile}`);
-    throw error;
-  }
-
-  log(`Encrypted ${unencryptedFile} to ${encryptedFile}`);
-  return encryptedFile;
-}
-
-/**
  * Decrypt secrets
  * @param {string} secrets
  * @returns {string}
@@ -99,113 +65,22 @@ function decrypt(secrets) {
 }
 
 /**
- * return decrypted file contents
- * @param {string} encryptedFile
+ * Return JSON parsed decrypted secrets
  * @param {string} secrets
- */
-function decryptFromFile(encryptedFile) {
-  return decrypt(readFileContents(encryptedFile, "decrypted"));
-}
-
-/**
- * Decrypt a file. Overwrites the encrypted file if decryptedFile is not supplied.
- * @param {string} encryptedFile
- * @param {string} [decryptedFile]
- */
-function decryptFile(encryptedFile, decryptedFile) {
-  decryptedFile = decryptedFile || encryptedFile;
-
-  try {
-    const secretsFileContents = readFileContents(encryptedFile, "encrypted");
-    const decryptedSecrets = decrypt(secretsFileContents);
-    writeFileContents(decryptedFile, decryptedSecrets, "decrypted");
-  } catch (error) {
-    log(`Unable to decrypt ${encryptedFile}`);
-    throw error;
-  }
-
-  log(`Decrypted ${encryptedFile} to ${decryptedFile}`);
-  return decryptedFile;
-}
-
-/**
- * Parse encrypted .env file and return as Key-Value object
- * @param {string} filePath
- * @param {{populateEnv: boolean}} [options={ populateEnv: false }]
- * @returns {object}}
- */
-function decryptEnvFile(filePath, options = { populateEnv: false }) {
-  const data = dotenv.parse(decryptFromFile(path.resolve(filePath)));
-  if (options.populateEnv) {
-    process.env = { ...process.env, ...data };
-  }
-
-  return data;
-}
-
-/**
- * Return parsed decrypted JSON file
- * @param {string} filePath
  * @param {{populateEnv: boolean}} [options={ populateEnv: false }]
  * @returns {object}
  */
-function decryptJSON(filePath, options = { populateEnv: false }) {
-  const data = JSON.parse(decryptFromFile(filePath));
+function decryptJSON(secrets, options = { populateEnv: false }) {
+  const data = JSON.parse(decrypt(secrets));
   if (options.populateEnv) {
     process.env = { ...process.env, ...data };
   }
 
   return data;
-}
-
-/**
- * Read the contents of a file
- * @param {string} filePath
- * @param {string} form encrypted | unencrypted
- * @returns
- */
-function readFileContents(filePath, form) {
-  filePath = path.resolve(filePath);
-  log(`Reading ${form} secrets = require(${filePath}`);
-
-  let fileContents = null;
-  try {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
-    fileContents = fs.readFileSync(filePath, { encoding: "utf-8" });
-  } catch (error) {
-    log(`Unable to read ${form} secrets = require(${filePath}`);
-    throw error;
-  }
-
-  return fileContents;
-}
-
-/**
- * Write the contents to a file
- * @param {string} filePath
- * @param {string} fileContents
- * @param {string} form encrypted | unencrypted
- */
-function writeFileContents(filePath, fileContents, form) {
-  filePath = path.resolve(filePath);
-  log(`Writing ${form} secrets to ${filePath}`);
-
-  try {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
-    fs.writeFileSync(filePath, fileContents, { encoding: "utf-8" });
-  } catch (error) {
-    log(`Unable to write ${form} secrets = require(${filePath}`);
-    throw error;
-  }
 }
 
 module.exports = {
   encrypt: encrypt,
-  encryptToFile: encryptToFile,
-  encryptFile: encryptFile,
   decrypt: decrypt,
-  decryptFromFile: decryptFromFile,
-  decryptFile: decryptFile,
-  decryptEnvFile: decryptEnvFile,
   decryptJSON: decryptJSON,
 };

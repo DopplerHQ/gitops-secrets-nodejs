@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const secrets = require("../src/secrets");
+const secrets = require("../src/index");
 
 // eslint-disable-next-line security/detect-non-literal-fs-filename
 const read = (file) => fs.readFileSync(path.resolve(file), { encoding: "utf8" });
@@ -43,14 +43,27 @@ test("ENV string", () => {
   expect(secrets.decrypt(secrets.encrypt(ENV_SECRETS))).toBe(ENV_SECRETS);
 });
 
-test("ENV file contents", () => {
+test("encrypt .env file contents", () => {
   const envFile = read("./tests/fixtures/.env");
   expect(secrets.decrypt(secrets.encrypt(envFile))).toBe(envFile);
 });
 
-test("JSON file contents", () => {
-  const jsonFile = read("./tests/fixtures/secrets.json");
-  expect(secrets.decrypt(secrets.encrypt(jsonFile))).toBe(jsonFile);
+test("encryptToFile and decryptFromFile", () => {
+  secrets.encryptToFile("secrets.enc.json", JSON_SECRETS);
+  expect(secrets.decryptFromFile("secrets.enc.json")).toBe(JSON_SECRETS);
+  rm("secrets.enc.json");
+});
+
+test("encryptToFile with esm format", () => {
+  secrets.encryptToFile("secrets.enc.js", JSON_SECRETS, { format: "cjs" });
+  expect(read("secrets.enc.js")).toContain("module.exports = CIPHER_TEXT");
+  rm("secrets.enc.js");
+});
+
+test("encryptToFile with cjs format", () => {
+  secrets.encryptToFile("secrets.enc.js", JSON_SECRETS, { format: "esm" });
+  expect(read("secrets.enc.js")).toContain("export default CIPHER_TEXT");
+  rm("secrets.enc.js");
 });
 
 test("ENV file", () => {
@@ -67,30 +80,14 @@ test("JSON file", () => {
   rm("./secrets.json.enc", "./secrets.json");
 });
 
-test("decryptEnvFile", () => {
-  const data = secrets.decryptEnvFile("./tests/fixtures/.env.enc");
-  expect(data.API_KEY).not.toBeUndefined();
-  expect(data.AUTH_TOKEN).not.toBeUndefined();
-  expect(process.env.API_KEY).toBeUndefined();
-  expect(process.env.AUTH_TOKEN).toBeUndefined();
-});
-
-test("decryptEnvFile populate process.env", () => {
-  const data = secrets.decryptEnvFile("./tests/fixtures/.env.enc", { populateEnv: true });
-  expect(data.API_KEY).not.toBeUndefined();
-  expect(data.AUTH_TOKEN).not.toBeUndefined();
-  expect(process.env.API_KEY).not.toBeUndefined();
-  expect(process.env.AUTH_TOKEN).not.toBeUndefined();
-});
-
-test("decryptJSON", () => {
-  const data = secrets.decryptJSON("./tests/fixtures/secrets.json.enc");
+test("decryptJSONFile", () => {
+  const data = secrets.decryptJSONFile("./tests/fixtures/secrets.json.enc");
   expect(data.API_KEY).toBeDefined();
   expect(data.AUTH_TOKEN).toBeDefined();
 });
 
-test("decryptJSON populate process.env", () => {
-  const data = secrets.decryptJSON("./tests/fixtures/secrets.json.enc", { populateEnv: true });
+test("decryptJSONFile populate process.env", () => {
+  const data = secrets.decryptJSONFile("./tests/fixtures/secrets.json.enc", { populateEnv: true });
   expect(data.API_KEY).toBeDefined();
   expect(data.AUTH_TOKEN).toBeDefined();
   expect(process.env.API_KEY).toBeDefined();
