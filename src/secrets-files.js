@@ -1,157 +1,56 @@
 const fs = require("fs");
 const path = require("path");
 const { log } = require("./utils.js");
-const { encrypt, decrypt } = require("./secrets.js");
+const secrets = require("./secrets.js");
+const DEFAULT_SECRETS_PATH = path.join(__dirname, "../secrets.enc.js");
+
+let SECRETS_CACHE;
 
 /**
- * Encrypt contents to a file
- * @param {string} encryptedFile
- * @param {string} secrets
- * @param {{format: string}} [options={format: null}] formats: cjs | esm
+ * Encrypt contents to a JS module. This is so secret contents can be accessed without the fs module or special handling
+ * for static files for cases like Vercel where accessing arbitrary static files is incredibly challenging.
+ * @param {{format: string, format: string }} [options={path: null, format: null}]
  */
+function encryptToFile(secretsObject, options = { path: null, format: null }) {
+  const cipherText = secrets.encrypt(secretsObject);
+  const filePath = options.path ? path.resolve(options.path) : DEFAULT_SECRETS_PATH;
+  const format = options.format || (process.env.npm_package_type === "module" ? "esm" : "cjs");
+  const fileContents = `const CIPHER_TEXT = "${cipherText}"; ${format === "esm" ? 'export default CIPHER_TEXT;' : 'module.exports = CIPHER_TEXT;'}`;
 
-function encryptToFile(encryptedFile, secrets, options = { format: null }) {
-  const encryptedSecrets = encrypt(secrets);
-  let fileContents;
-
-  /**
-   * Provide wrappers around encrypted data for environments like Vercel
-   * where including and reading adhoc files is tricky.
-   */
-  switch (options.format) {
-    case "cjs":
-      fileContents = `const CIPHER_TEXT = "${encryptedSecrets}";\nmodule.exports = CIPHER_TEXT;`;
-      break;
-    case "esm":
-      fileContents = `const CIPHER_TEXT = "${encryptedSecrets}";\nexport default CIPHER_TEXT;`;
-      break;
-    default:
-      fileContents = encryptedSecrets;
-      break;
-  }
-
-  writeFileContents(encryptedFile, fileContents, "encrypted");
-}
-
-/**
- * Encrypt a file. Overwrites the unencrypted file if the encryptedFile is not supplied.
- * @param {string} unencryptedFile
- * @param {string} [encryptedFile]
- */
-function encryptFile(unencryptedFile, encryptedFile) {
-  encryptedFile = encryptedFile || unencryptedFile;
-
-  try {
-    const fileContents = readFileContents(unencryptedFile, "unencrypted");
-    const encryptedSecrets = encrypt(fileContents);
-    writeFileContents(encryptedFile, encryptedSecrets, "encrypted");
-  } catch (error) {
-    log(`Unable to encrypt ${unencryptedFile}`);
-    throw error;
-  }
-
-  log(`Encrypted ${unencryptedFile} to ${encryptedFile}`);
-  return encryptedFile;
-}
-
-/**
- * return decrypted file contents
- * @param {string} encryptedFile
- * @param {string} secrets
- */
-function decryptFromFile(encryptedFile) {
-  return decrypt(readFileContents(encryptedFile, "decrypted"));
-}
-
-/**
- * Decrypt a file. Overwrites the encrypted file if decryptedFile is not supplied.
- * @param {string} encryptedFile
- * @param {string} [decryptedFile]
- */
-function decryptFile(encryptedFile, decryptedFile) {
-  decryptedFile = decryptedFile || encryptedFile;
-
-  try {
-    const secretsFileContents = readFileContents(encryptedFile, "encrypted");
-    const decryptedSecrets = decrypt(secretsFileContents);
-    writeFileContents(decryptedFile, decryptedSecrets, "decrypted");
-  } catch (error) {
-    log(`Unable to decrypt ${encryptedFile}`);
-    throw error;
-  }
-
-  log(`Decrypted ${encryptedFile} to ${decryptedFile}`);
-  return decryptedFile;
-}
-
-/**
- * Return parsed decrypted JSON file
- * @param {string} filePath
- * @param {{populateEnv: boolean}} [options={ populateEnv: false }]
- * @returns {object}
- */
-function decryptJSONFile(filePath, options = { populateEnv: false }) {
-  const data = JSON.parse(decryptFromFile(filePath));
-  if (options.populateEnv) {
-    process.env = { ...process.env, ...data };
-  }
-
-  return data;
-}
-
-/**
- * Read the contents of a file
- * @param {string} filePath
- * @param {string} form encrypted | unencrypted
- * @returns
- */
-function readFileContents(filePath, form) {
-  if (!fs) {
-    throw "Unable to write to file system as the fs module is not available in this execution environment.";
-  }
-
-  filePath = path.resolve(filePath);
-  log(`Reading ${form} secrets = require(${filePath}`);
-
-  let fileContents = null;
-  try {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
-    fileContents = fs.readFileSync(filePath, { encoding: "utf-8" });
-  } catch (error) {
-    log(`Unable to read ${form} secrets = require(${filePath}`);
-    throw error;
-  }
-
-  return fileContents;
-}
-
-/**
- * Write the contents to a file
- * @param {string} filePath
- * @param {string} fileContents
- * @param {string} form encrypted | unencrypted
- */
-function writeFileContents(filePath, fileContents, form) {
-  if (!fs) {
-    throw "Unable to write to file system as the fs module is not available in this execution environment.";
-  }
-
-  filePath = path.resolve(filePath);
-  log(`Writing ${form} secrets to ${filePath}`);
+  log(`Writing secrets to ${filePath}`);
 
   try {
     // eslint-disable-next-line security/detect-non-literal-fs-filename
     fs.writeFileSync(filePath, fileContents, { encoding: "utf-8" });
   } catch (error) {
-    log(`Unable to write ${form} secrets = require(${filePath}`);
+    log(`Unable to write secrets to ${filePath}`);
     throw error;
   }
 }
 
+/**
+ * Decrypt secrets saved to a JS module in JSON format
+ * @param {{ path: string, cache: boolean, populateEnv: boolean }} [{ path: null, cache: true, populateEnv: false }]
+ * @returns
+ */
+function decryptFromFile(options = { path: null, cache: true, populateEnv: false }) {
+  const secretsPath = options.path ? path.resolve(options.path) : DEFAULT_SECRETS_PATH;
+  let secretsObject;
+
+  if (SECRETS_CACHE && options.cache) {
+    secretsObject = SECRETS_CACHE;
+  } else {
+    // eslint-disable-next-line security/detect-non-literal-require
+    secretsObject = secrets.decrypt(require(secretsPath));
+  }
+
+  SECRETS_CACHE = options.cache ? secrets : null;
+  process.env = options.populateEnv ? { ...process.env, ...secrets.fetch() } : process.env;
+
+  return secretsObject;
+}
+
 module.exports = {
   encryptToFile: encryptToFile,
-  encryptFile: encryptFile,
   decryptFromFile: decryptFromFile,
-  decryptJSONFile: decryptJSONFile,
-  decryptFile: decryptFile,
 };

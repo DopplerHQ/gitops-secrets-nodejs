@@ -1,9 +1,9 @@
 # To Do
 
 - [x] Secrets API
-- [x] Secrets API tests
+- [ ] Secrets API tests
 - [x] Doppler secrets provider
-- [x] Doppler secrets provider tests
+- [ ] Doppler secrets provider tests
 - [x] GitHub Action check
 - [x] GitHub Action test
 - [ ] README with all usage examples
@@ -14,11 +14,9 @@
 ## Secrets API
 
 - [x] Encrypt string
-- [x] Encrypt string to file
-- [x] Encrypt file
 - [x] Decrypt string
-- [x] Decrypt from file to string
-- [] Decrypt file
+- [x] Encrypt object to a file as a CJS or ES module
+- [x] Decrypt JSON from a file as a CJS ES module
 
 ## Providers
 

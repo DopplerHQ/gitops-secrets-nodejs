@@ -7,9 +7,10 @@ const ALGORITHM = "aes-256-gcm";
 const AES_AUTH_TAG_BYTES = 16;
 const AES_IV_BYTES = 12;
 const AES_SALT_BYTES = 8;
-
 const ENCODING = "base64";
 const ENCODING_PREFIX = "base64:";
+
+let SECRETS_CACHE;
 
 function masterKey() {
   if (!process.env.GITOPS_SECRETS_MASTER_KEY || process.env.GITOPS_SECRETS_MASTER_KEY.length < 16) {
@@ -20,7 +21,7 @@ function masterKey() {
 }
 
 /**
- * Encrypt secrets
+ * Encrypt secrets from Object to JSON format
  * @param {string} secrets
  * @returns {string}
  */
@@ -32,7 +33,7 @@ function encrypt(secrets) {
   const key = crypto.pbkdf2Sync(masterKey(), salt, PBKDF2_ROUNDS, PBKDF2_KEYLEN, PBKDF2_DIGEST);
 
   const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
-  const cipherText = Buffer.concat([cipher.update(secrets, "utf8"), cipher.final()]);
+  const cipherText = Buffer.concat([cipher.update(JSON.stringify(secrets), "utf8"), cipher.final()]);
   const authTag = cipher.getAuthTag();
   const combinedData = Buffer.concat([cipherText, authTag]);
 
@@ -40,7 +41,7 @@ function encrypt(secrets) {
 }
 
 /**
- * Decrypt secrets
+ * Decrypt secrets in JSON format to Object
  * @param {string} secrets
  * @returns {string}
  */
@@ -61,26 +62,32 @@ function decrypt(secrets) {
   // decrypt cipher text
   const decipher = crypto.createDecipheriv(ALGORITHM, key, iv).setAuthTag(authTag);
   const decrypted = decipher.update(cipherText, "binary", "utf8") + decipher.final("utf8");
-  return decrypted;
+  return JSON.parse(decrypted);
 }
 
 /**
- * Return JSON parsed decrypted secrets
- * @param {string} secrets
- * @param {{populateEnv: boolean}} [options={ populateEnv: false }]
- * @returns {object}
+ * Convenience decryption method with cache and environment variable options
+ * @param {string} cipherText
+ * @param {{ cache: boolean, populateEnv: boolean }} [{ path: null, cache: true, populateEnv: false }]
+ * @returns
  */
-function decryptJSON(secrets, options = { populateEnv: false }) {
-  const data = JSON.parse(decrypt(secrets));
-  if (options.populateEnv) {
-    process.env = { ...process.env, ...data };
+function fetch(cipherText, options = { cache: true, populateEnv: false }) {
+  let secrets;
+
+  if (SECRETS_CACHE && options.cache) {
+    secrets = SECRETS_CACHE;
+  } else {
+    secrets = decrypt(cipherText);
   }
 
-  return data;
+  SECRETS_CACHE = options.cache ? secrets : null;
+  process.env = options.populateEnv ? { ...process.env, ...secrets } : process.env;
+
+  return secrets;
 }
 
 module.exports = {
   encrypt: encrypt,
   decrypt: decrypt,
-  decryptJSON: decryptJSON,
+  fetch: fetch,
 };
