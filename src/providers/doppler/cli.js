@@ -4,7 +4,7 @@ const { spawnSync } = require("child_process");
 /**
  * @returns {(undefined|string)}
  */
-function download() {
+function fetch() {
   if (spawnSync("doppler", [], { encoding: "utf8" }).status !== 0) {
     return;
   }
@@ -21,4 +21,4 @@ function download() {
   return JSON.parse(command.stdout);
 }
 
-module.exports = { download: download };
+module.exports = { fetch: fetch };

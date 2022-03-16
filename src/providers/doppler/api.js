@@ -5,7 +5,7 @@ const { log } = require("../../utils.js");
  * Fetch secrets from Doppler the API. Requires the `DOPPLER_TOKEN` environment variable to be set. See https://docs.doppler.com/docs/enclave-service-tokens
  * @returns {Promise}
  */
-async function download() {
+async function fetch() {
   if (!process.env.DOPPLER_TOKEN) {
     return new Promise((_, reject) => reject("Doppler API Error: The 'DOPPLER_TOKEN' environment variable is required"));
   }
@@ -27,4 +27,4 @@ async function download() {
   });
 }
 
-module.exports = { download: download };
+module.exports = { fetch: fetch };

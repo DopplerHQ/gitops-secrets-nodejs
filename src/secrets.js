@@ -10,8 +10,6 @@ const AES_SALT_BYTES = 8;
 const ENCODING = "base64";
 const ENCODING_PREFIX = "base64:";
 
-let SECRETS_CACHE;
-
 function masterKey() {
   if (!process.env.GITOPS_SECRETS_MASTER_KEY || process.env.GITOPS_SECRETS_MASTER_KEY.length < 16) {
     throw `The 'GITOPS_SECRETS_MASTER_KEY' environment variable must be set to a string of 16 characters or more`;
@@ -19,6 +17,8 @@ function masterKey() {
 
   return process.env.GITOPS_SECRETS_MASTER_KEY;
 }
+
+const populateEnv = (payload) => (process.env = { ...process.env, ...payload });
 
 /**
  * Encrypt secrets from Object to JSON format
@@ -69,29 +69,8 @@ function decrypt(secrets) {
   return JSON.parse(decrypted);
 }
 
-/**
- * Convenience decryption method with cache and environment variable options
- * @param {string} cipherText
- * @param {{ cache: boolean, populateEnv: boolean }} [{ path: null, cache: true, populateEnv: false }]
- * @returns
- */
-function load(cipherText, options = { cache: true, populateEnv: false }) {
-  let secrets;
-
-  if (SECRETS_CACHE && options.cache) {
-    secrets = SECRETS_CACHE;
-  } else {
-    secrets = decrypt(cipherText);
-  }
-
-  SECRETS_CACHE = options.cache ? secrets : null;
-  process.env = options.populateEnv ? { ...process.env, ...secrets } : process.env;
-
-  return secrets;
-}
-
 module.exports = {
   encrypt: encrypt,
   decrypt: decrypt,
-  load: load,
+  populateEnv: populateEnv,
 };

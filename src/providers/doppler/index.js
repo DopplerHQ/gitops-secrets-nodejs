@@ -9,30 +9,17 @@ const api = require("./api");
  * @returns {object}
  */
 async function fetchAsync() {
-  const stdio = {
-    stdout: null,
-    stderr: null,
-  };
-
-  // Swallow exceptions as using the CLI is an optimistic option as the API will be used in most instances
+  // Swallow CLI excepts as it's only an optimistic case
   try {
-    const cliSecrets = cli.download();
+    const cliSecrets = cli.fetch();
     if (cliSecrets) {
-      stdio.stdout = JSON.stringify(cliSecrets);
-      return stdio;
+      return new Promise((resolve) => resolve(cliSecrets));
     }
   } catch (error) {
     // eslint-disable-next-line no-empty
   }
 
-  try {
-    const payload = await api.download();
-    stdio.stdout = JSON.stringify(payload);
-    return stdio;
-  } catch (error) {
-    stdio.stderr = error;
-    return stdio;
-  }
+  return api.fetch();
 }
 
 /**
@@ -52,11 +39,11 @@ function fetch() {
 // If executed as a script
 if (require.main === module) {
   (async () => {
-    const stdio = await fetchAsync();
-    stdio.stdout && process.stdout.write(stdio.stdout);
-    stdio.stderr && process.stderr.write(stdio.stderr);
-
-    if (stdio.stderr !== null) {
+    try {
+      const secrets = await fetchAsync();
+      process.stdout.write(JSON.stringify(secrets));
+    } catch (error) {
+      process.stderr.write(error);
       // eslint-disable-next-line no-process-exit
       process.exit(1);
     }
