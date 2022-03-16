@@ -6,95 +6,95 @@ const secrets = require("../src/index");
 const read = (file) => fs.readFileSync(path.resolve(file), { encoding: "utf8" });
 const rm = (...files) => files.forEach((file) => fs.rmSync(path.resolve(file)));
 
+const PROCESS_ENV = process.env;
 const GITOPS_SECRETS_MASTER_KEY = "1e18cc54-1d77-45a1-ae46-fecebce35ae2";
-beforeEach(() => (process.env.GITOPS_SECRETS_MASTER_KEY = GITOPS_SECRETS_MASTER_KEY));
+beforeEach(() => (process.env = { ...PROCESS_ENV, GITOPS_SECRETS_MASTER_KEY: GITOPS_SECRETS_MASTER_KEY }));
 
-const TINY_SECRETS = "A=B";
-const JSON_SECRETS = `{ "API_KEY": "dfa64ad2-462e-4751-b46e-3660c91f1811" }`;
-const ENV_SECRETS = `API_KEY="dfa64ad2-462e-4751-b46e-3660c91f1811"`;
+const SECRETS = {
+  API_KEY: "46f181e0-d68c-49d2-aa4c-1dd30d954877",
+  AUTH_TOKEN: "cb71114f-22c3-4a66-af06-39d8d39a2af3",
+};
 
 test("Fail when process.env.GITOPS_SECRETS_MASTER_KEY is undefined", () => {
   process.env.GITOPS_SECRETS_MASTER_KEY = undefined;
-  expect(() => secrets.encrypt(JSON_SECRETS)).toThrow();
+  expect(() => secrets.encrypt(SECRETS)).toThrow();
   expect(() => secrets.masterKey()).toThrow();
 });
 
 test("Fail when process.env.GITOPS_SECRETS_MASTER_KEY is less than 16 chars", () => {
   process.env.GITOPS_SECRETS_MASTER_KEY = "6791f8e3";
-  expect(() => secrets.encrypt(JSON_SECRETS)).toThrow();
+  expect(() => secrets.encrypt(SECRETS)).toThrow();
   expect(() => secrets.masterKey()).toThrow();
 });
 
-test("Tiny secret string", () => {
-  expect(secrets.decrypt(secrets.encrypt(TINY_SECRETS))).toBe(TINY_SECRETS);
+test("Encrypt and decrypt in memory", () => {
+  expect(secrets.decrypt(secrets.encrypt(SECRETS))).toHaveProperty("API_KEY");
 });
 
-test("Decrypt with incorrect master key", () => {
-  const encrypted = secrets.encrypt(TINY_SECRETS);
-  process.env.GITOPS_SECRETS_MASTER_KEY = "bc284ab4-afe3-4284-8c7e-377183808866";
-  expect(() => secrets.decrypt(encrypted)).toThrow();
+test("Secrets build", () => {
+  secrets.build(SECRETS);
+  expect(secrets.loadSecrets()).toHaveProperty(`API_KEY`);
+  rm(secrets.DEFAULT_JS_PATH);
 });
 
-test("JSON string", () => {
-  expect(secrets.decrypt(secrets.encrypt(JSON_SECRETS))).toBe(JSON_SECRETS);
+test("Secrets build with populateEnv", () => {
+  expect(process.env).not.toHaveProperty(`API_KEY`);
+  secrets.build(SECRETS);
+  secrets.loadSecrets().populateEnv();
+  expect(process.env).toHaveProperty(`API_KEY`);
+  rm(secrets.DEFAULT_JS_PATH);
 });
 
-test("ENV string", () => {
-  expect(secrets.decrypt(secrets.encrypt(ENV_SECRETS))).toBe(ENV_SECRETS);
+test("Secrets build with a path", () => {
+  const SECRETS_PATH = ".secrets/custom.enc.js";
+  secrets.build(SECRETS, { path: SECRETS_PATH });
+  // eslint-disable-next-line security/detect-non-literal-require
+  expect(require(`../${SECRETS_PATH}`).loadSecrets()).toHaveProperty("API_KEY");
+  rm(SECRETS_PATH);
 });
 
-test("encrypt .env file contents", () => {
-  const envFile = read("./tests/fixtures/.env");
-  expect(secrets.decrypt(secrets.encrypt(envFile))).toBe(envFile);
+test("Secrets build outputs in CommonJS format, even if project uses modules as require is performed locally", () => {
+  const NPM_PACKAGE_TYPE = process.env.npm_package_type;
+  process.env.npm_package_type = "module";
+  secrets.build(SECRETS);
+  expect(read(secrets.DEFAULT_JS_PATH)).toContain("module.exports");
+  rm(secrets.DEFAULT_JS_PATH);
+  process.env.npm_package_type = NPM_PACKAGE_TYPE;
 });
 
-test("encryptToFile and decryptFromFile", () => {
-  secrets.encryptToFile("secrets.enc.json", JSON_SECRETS);
-  expect(secrets.decryptFromFile("secrets.enc.json")).toBe(JSON_SECRETS);
-  rm("secrets.enc.json");
+test("Secrets build outputs in ES modules format path is provided", () => {
+  const SECRETS_PATH = ".secrets/custom.enc.js";
+  const NPM_PACKAGE_TYPE = process.env.npm_package_type;
+  process.env.npm_package_type = "module";
+  secrets.build(SECRETS, { path: SECRETS_PATH });
+  expect(read(SECRETS_PATH)).toContain("export {");
+  rm(SECRETS_PATH);
+  process.env.npm_package_type = NPM_PACKAGE_TYPE;
 });
 
-test("encryptToFile with esm format", () => {
-  secrets.encryptToFile("secrets.enc.js", JSON_SECRETS, { format: "cjs" });
-  expect(read("secrets.enc.js")).toContain("module.exports = CIPHER_TEXT");
-  rm("secrets.enc.js");
+test("Encrypt to JSON file", () => {
+  secrets.encryptToFile(SECRETS);
+  expect(secrets.decryptFromFile()).toHaveProperty("API_KEY");
+  rm(secrets.DEFAULT_FILE_PATH);
 });
 
-test("encryptToFile with cjs format", () => {
-  secrets.encryptToFile("secrets.enc.js", JSON_SECRETS, { format: "esm" });
-  expect(read("secrets.enc.js")).toContain("export default CIPHER_TEXT");
-  rm("secrets.enc.js");
+test("Encrypt to JSON file with populateEnv", () => {
+  secrets.encryptToFile(SECRETS);
+  const payload = secrets.decryptFromFile();
+  expect(process.env).not.toHaveProperty("API_KEY");
+  expect(payload).toHaveProperty("API_KEY");
+  payload.populateEnv();
+  expect(process.env).toHaveProperty("API_KEY");
+  rm(secrets.DEFAULT_FILE_PATH);
 });
 
-test("ENV file", () => {
-  secrets.encryptFile("./tests/fixtures/.env", "./.env.enc");
-  secrets.decryptFile("./.env.enc", "./.env");
-  expect(read("./tests/fixtures/.env")).toBe(read("./.env"));
-  rm("./.env.enc", "./.env");
-});
-
-test("JSON file", () => {
-  secrets.encryptFile("./tests/fixtures/secrets.json", "./secrets.json.enc");
-  secrets.decryptFile("./secrets.json.enc", "./secrets.json");
-  expect(read("./secrets.json")).toBe(read("./tests/fixtures/secrets.json"));
-  rm("./secrets.json.enc", "./secrets.json");
-});
-
-test("decryptJSONFile", () => {
-  const data = secrets.decryptJSONFile("./tests/fixtures/secrets.json.enc");
-  expect(data.API_KEY).toBeDefined();
-  expect(data.AUTH_TOKEN).toBeDefined();
-});
-
-test("decryptJSONFile populate process.env", () => {
-  const data = secrets.decryptJSONFile("./tests/fixtures/secrets.json.enc", { populateEnv: true });
-  expect(data.API_KEY).toBeDefined();
-  expect(data.AUTH_TOKEN).toBeDefined();
-  expect(process.env.API_KEY).toBeDefined();
-  expect(process.env.AUTH_TOKEN).toBeDefined();
-});
-
-test("Doppler CLI .env", () => {
-  const envFile = read("./tests/fixtures/doppler.env");
-  expect(() => secrets.decrypt(envFile)).not.toThrow();
+test("Encrypt to JSON file with path", () => {
+  const SECRETS_PATH = ".secrets/custom.enc.json";
+  secrets.encryptToFile(SECRETS, { path: SECRETS_PATH });
+  const payload = secrets.decryptFromFile(SECRETS_PATH);
+  expect(process.env).not.toHaveProperty("API_KEY");
+  expect(payload).toHaveProperty("API_KEY");
+  payload.populateEnv();
+  expect(process.env).toHaveProperty("API_KEY");
+  rm(SECRETS_PATH);
 });

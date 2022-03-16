@@ -6,63 +6,44 @@ const api = require("./api");
 
 /**
  * Fetch secrets from Doppler using the Doppler CLI or Doppler API.
- * Requires either the `DOPPLER_TOKEN` environment variable (see https://docs.doppler.com/docs/enclave-service-tokens) or the CLI to be authenticated via `doppler login` if installed
- * @param {string} format
- * @returns
+ * @returns {object}
  */
-async function fetchAsync(format) {
-  const stdio = {
-    stdout: null,
-    stderr: null,
-  };
-
-  // Swallow exceptions as using the CLI is an optimistic option as the API will be used in most instances
+async function fetchAsync() {
+  // Swallow CLI excepts as it's only an optimistic case
   try {
-    const cliSecrets = cli.download(format);
+    const cliSecrets = cli.fetch();
     if (cliSecrets) {
-      stdio.stdout = cliSecrets;
-      return stdio;
+      return new Promise((resolve) => resolve(cliSecrets));
     }
   } catch (error) {
     // eslint-disable-next-line no-empty
   }
 
-  try {
-    const payload = await api.download(format);
-    stdio.stdout = payload;
-    return stdio;
-  } catch (error) {
-    stdio.stderr = error;
-    return stdio;
-  }
+  return api.fetch();
 }
 
 /**
- * Fetch secrets from Doppler using the Doppler CLI or Doppler API.
- * Requires either the `DOPPLER_TOKEN` environment variable (see https://docs.doppler.com/docs/enclave-service-tokens) or the CLI to be authenticated via `doppler login` if installed
- * @param {string} [format=json] json | env | yaml | docker | env-no-quotes
+ * Fetch secrets from Doppler
  * @returns {string}
  */
-function fetch(format = "json") {
+function fetch() {
   // Executing this file as a command so secrets can be returned synchronously
-  const command = spawnSync("node", [path.resolve(__filename), "--format", format], { encoding: "utf8", env: process.env });
+  const command = spawnSync("node", [path.resolve(__filename)], { encoding: "utf8", env: process.env });
   if (command.status !== 0) {
     throw command.stderr;
   }
 
-  return command.stdout;
+  return JSON.parse(command.stdout);
 }
 
 // If executed as a script
 if (require.main === module) {
   (async () => {
-    const [, , ...args] = process.argv;
-    const format = args[0] === "--format" && args[1] ? args[1] : "json";
-    const stdio = await fetchAsync(format);
-    stdio.stdout && process.stdout.write(stdio.stdout);
-    stdio.stderr && process.stderr.write(stdio.stderr);
-
-    if (stdio.stderr !== null) {
+    try {
+      const secrets = await fetchAsync();
+      process.stdout.write(JSON.stringify(secrets));
+    } catch (error) {
+      process.stderr.write(error);
       // eslint-disable-next-line no-process-exit
       process.exit(1);
     }

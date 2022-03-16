@@ -2,15 +2,14 @@
 const { spawnSync } = require("child_process");
 
 /**
- * @param {string} [format=json] json | env | yaml | docker | env-no-quotes
  * @returns {(undefined|string)}
  */
-function download(format = "json") {
+function fetch() {
   if (spawnSync("doppler", [], { encoding: "utf8" }).status !== 0) {
     return;
   }
 
-  const command = spawnSync("doppler", ["secrets", "download", "--format", format, "--no-file"], {
+  const command = spawnSync("doppler", ["secrets", "download", "--no-file"], {
     env: process.env,
     encoding: "utf8",
   });
@@ -19,7 +18,7 @@ function download(format = "json") {
     throw command.stderr;
   }
 
-  return command.stdout;
+  return JSON.parse(command.stdout);
 }
 
-module.exports = { download: download };
+module.exports = { fetch: fetch };
