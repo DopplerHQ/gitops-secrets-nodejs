@@ -13,7 +13,7 @@ async function fetchAsync() {
   try {
     const cliSecrets = cli.fetch();
     if (cliSecrets) {
-      return new Promise((resolve) => resolve(cliSecrets));
+      return cliSecrets;
     }
   } catch (error) {
     // eslint-disable-next-line no-empty

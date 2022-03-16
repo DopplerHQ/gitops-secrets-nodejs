@@ -7,7 +7,7 @@ const { log } = require("../../utils.js");
  */
 async function fetch() {
   if (!process.env.DOPPLER_TOKEN) {
-    return new Promise((_, reject) => reject("Doppler API Error: The 'DOPPLER_TOKEN' environment variable is required"));
+    throw new Error("Doppler API Error: The 'DOPPLER_TOKEN' environment variable is required");
   }
 
   log("Fetching secrets from API");
@@ -22,7 +22,7 @@ async function fetch() {
       })
       .on("error", (error) => {
         log(`Doppler API Error - ${error}`);
-        reject(`Doppler API Error: ${error}`);
+        reject(new Error(`Doppler API Error: ${error}`));
       });
   });
 }
