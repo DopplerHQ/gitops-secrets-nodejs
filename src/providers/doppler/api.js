@@ -11,15 +11,26 @@ async function fetch() {
   }
 
   log("Fetching secrets from API");
+
   return new Promise(function (resolve, reject) {
+    const encodedAuthData = Buffer.from(`${process.env.DOPPLER_TOKEN}:`).toString("base64");
+    const authHeader = `Basic ${encodedAuthData}`;
     https
-      .get(`https://${process.env.DOPPLER_TOKEN}@api.doppler.com/v3/configs/config/secrets/download`, (res) => {
-        let secrets = "";
-        res.on("data", (data) => (secrets += data));
-        res.on("end", () => {
-          resolve(JSON.parse(secrets));
-        });
-      })
+      .get(
+        "https://api.doppler.com/v3/configs/config/secrets/download",
+        {
+          headers: {
+            Authorization: authHeader,
+          },
+        },
+        (res) => {
+          let secrets = "";
+          res.on("data", (data) => (secrets += data));
+          res.on("end", () => {
+            resolve(JSON.parse(secrets));
+          });
+        }
+      )
       .on("error", (error) => {
         log(`Doppler API Error - ${error}`);
         reject(new Error(`Doppler API Error: ${error}`));
