@@ -1,7 +1,7 @@
 const crypto = require("crypto");
 
-const PBKDF2_ROUNDS = 50000;
-const PBKDF2_KEYLEN = 32;
+const PBKDF2_ROUNDS = process.env.GITOPS_SECRETS_PBKDF2_ROUNDS || 1000000;
+const PBKDF2_KEYLEN = process.env.GITOPS_SECRETS_PBKDF2_KEYLEN || 32;
 const PBKDF2_DIGEST = "sha256";
 const ALGORITHM = "aes-256-gcm";
 const AES_AUTH_TAG_BYTES = 16;
@@ -37,7 +37,9 @@ function encrypt(secrets) {
   const authTag = cipher.getAuthTag();
   const combinedData = Buffer.concat([cipherText, authTag]);
 
-  return `${ENCODING_PREFIX}${salt.toString("base64")}-${iv.toString("base64")}-${combinedData.toString("base64")}`;
+  return `${ENCODING_PREFIX}${PBKDF2_ROUNDS}-${PBKDF2_KEYLEN}-${salt.toString("base64")}-${iv.toString(
+    "base64"
+  )}-${combinedData.toString("base64")}`;
 }
 
 /**
@@ -50,14 +52,16 @@ function decrypt(secrets) {
 
   // decode file contents
   const parts = secrets.split("-");
-  const salt = Buffer.from(parts[0], ENCODING);
-  const iv = Buffer.from(parts[1], ENCODING);
-  const data = Buffer.from(parts[2], ENCODING);
+  const rounds = parseInt(Buffer.from(parts[0], "utf8"), 10);
+  const keyLength = parseInt(Buffer.from(parts[1], "utf8"), 10);
+  const salt = Buffer.from(parts[2], ENCODING);
+  const iv = Buffer.from(parts[3], ENCODING);
+  const data = Buffer.from(parts[4], ENCODING);
   const cipherText = data.slice(0, data.length - AES_AUTH_TAG_BYTES);
   const authTag = data.slice(data.length - AES_AUTH_TAG_BYTES);
 
   // construct key
-  const key = crypto.pbkdf2Sync(masterKey(), salt, PBKDF2_ROUNDS, PBKDF2_KEYLEN, PBKDF2_DIGEST);
+  const key = crypto.pbkdf2Sync(masterKey(), salt, rounds, keyLength, PBKDF2_DIGEST);
 
   // decrypt cipher text
   const decipher = crypto.createDecipheriv(ALGORITHM, key, iv).setAuthTag(authTag);
@@ -71,7 +75,7 @@ function decrypt(secrets) {
  * @param {{ cache: boolean, populateEnv: boolean }} [{ path: null, cache: true, populateEnv: false }]
  * @returns
  */
-function fetch(cipherText, options = { cache: true, populateEnv: false }) {
+function load(cipherText, options = { cache: true, populateEnv: false }) {
   let secrets;
 
   if (SECRETS_CACHE && options.cache) {
@@ -89,5 +93,5 @@ function fetch(cipherText, options = { cache: true, populateEnv: false }) {
 module.exports = {
   encrypt: encrypt,
   decrypt: decrypt,
-  fetch: fetch,
+  load: load,
 };
