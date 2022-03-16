@@ -7,16 +7,16 @@ const DOPPLER_TOKEN = process.env.DOPPLER_TOKEN;
 
 beforeAll(() => {
   if (spawnSync("doppler").status !== 0) {
-    throw "Doppler CLI install check failed";
+    throw new Error("Doppler CLI install check failed");
   }
 
   if (!process.env.DOPPLER_TOKEN) {
-    throw `Doppler CLI auth check failed: The 'DOPPLER_TOKEN' environment variable is required`;
+    throw new Error(`Doppler CLI auth check failed: The 'DOPPLER_TOKEN' environment variable is required`);
   }
 
   const secretsCheck = spawnSync("doppler", ["secrets"]);
   if (secretsCheck.status !== 0) {
-    throw `Doppler CLI secrets check failed: ${secretsCheck.stderr}`;
+    throw new Error(`Doppler CLI secrets check failed: ${secretsCheck.stderr}`);
   }
 });
 
