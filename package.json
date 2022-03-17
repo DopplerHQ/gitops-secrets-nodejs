@@ -26,7 +26,16 @@
   "engines": {
     "node": ">=12"
   },
-  "main": "src/index.js",
+  "exports": {
+    ".": {
+      "require": "./src/index.js",
+      "import": "./src/index.js"
+    },
+    "./vercel": {
+      "require": "./src/vercel.js",
+      "import": "./src/vercel.js"
+    }
+  },
   "scripts": {
     "test": "jest",
     "lint": "eslint ./src ./tests",
