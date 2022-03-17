@@ -4,7 +4,7 @@ const secrets = require("../src/index");
 
 // eslint-disable-next-line security/detect-non-literal-fs-filename
 const read = (file) => fs.readFileSync(path.resolve(file), { encoding: "utf8" });
-const rm = (...files) => files.forEach((file) => fs.rmSync(path.resolve(file)));
+const rm = (...files) => files.forEach((file) => fs.unlinkSync(path.resolve(file)));
 
 const PROCESS_ENV = process.env;
 const GITOPS_SECRETS_MASTER_KEY = "1e18cc54-1d77-45a1-ae46-fecebce35ae2";
