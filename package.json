@@ -1,13 +1,17 @@
 {
   "name": "gitops-secrets",
+  "version": "0.0.1",
   "author": "Ryan Blunden <ryan.blunden@doppler.com>",
   "description": "GitOps encrypted secrets workflow",
   "repository": {
     "type": "git",
-    "url": "git://github.com/doppler-university/gitops-secrets.git"
+    "url": "https://github.com/doppler-university/gitops-secrets.git"
   },
-  "version": "0.0.1-DEV",
   "homepage": "https://github.com/doppler-university/gitops-secrets#readme",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/axios/axios/issues"
+  },
   "keywords": [
     "dotenv",
     "env",
@@ -56,6 +60,5 @@
     "jest": "^27.5.1",
     "jest-node-exports-resolver": "^1.1.5",
     "prettier": "^2.5.1"
-  },
-  "license": "MIT"
+  }
 }
