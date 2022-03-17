@@ -15,17 +15,22 @@ async function fetch() {
     const authHeader = `Basic ${encodedAuthData}`;
     https
       .get(
-        "https://api.doppler.com/v3/configs/config/secrets/download",
+        "https://api.doppler.com/v3/configs/config/secrets/download?format=json",
         {
           headers: {
             Authorization: authHeader,
           },
         },
         (res) => {
-          let secrets = "";
-          res.on("data", (data) => (secrets += data));
+          let payload = "";
+          res.on("data", (data) => (payload += data));
           res.on("end", () => {
-            resolve(JSON.parse(secrets));
+            if (res.statusCode === 200) {
+              resolve(JSON.parse(payload));
+            } else {
+              const error = JSON.parse(payload).messages.join(" ");
+              reject(new Error(`Doppler API Error: ${error}`));
+            }
           });
         }
       )

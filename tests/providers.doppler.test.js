@@ -9,11 +9,16 @@ if (!process.env.DOPPLER_TOKEN) {
 const DOPPLER_TOKEN = process.env.DOPPLER_TOKEN;
 beforeEach(() => (process.env.DOPPLER_TOKEN = DOPPLER_TOKEN));
 
-test("fetch fails without DOPPLER_TOKEN environment variable", async () => {
+test("fetch fails without DOPPLER_TOKEN", async () => {
   delete process.env.DOPPLER_TOKEN;
   await expect(doppler.fetch()).rejects.toThrowError("Doppler API Error");
 });
 
-test("fetch succeeds with DOPPLER_TOKEN environment variable", async () => {
+test("fetch fails with invalid DOPPLER_TOKEN", async () => {
+  process.env.DOPPLER_TOKEN = "XXXX";
+  await expect(doppler.fetch()).rejects.toThrowError();
+});
+
+test("fetch succeeds with DOPPLER_TOKEN", async () => {
   await expect(doppler.fetch()).resolves.toHaveProperty("DOPPLER_PROJECT");
 });
