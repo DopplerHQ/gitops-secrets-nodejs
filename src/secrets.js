@@ -12,13 +12,11 @@ const ENCODING_PREFIX = "base64:";
 
 function masterKey() {
   if (!process.env.GITOPS_SECRETS_MASTER_KEY || process.env.GITOPS_SECRETS_MASTER_KEY.length < 16) {
-    throw `The 'GITOPS_SECRETS_MASTER_KEY' environment variable must be set to a string of 16 characters or more`;
+    throw new Error(`The 'GITOPS_SECRETS_MASTER_KEY' environment variable must be set to a string of 16 characters or more`);
   }
 
   return process.env.GITOPS_SECRETS_MASTER_KEY;
 }
-
-const populateEnv = (payload) => (process.env = { ...process.env, ...payload });
 
 /**
  * Encrypt secrets from Object to JSON format
@@ -50,8 +48,12 @@ function encrypt(secrets) {
 function decrypt(secrets) {
   secrets = secrets.substring(ENCODING_PREFIX.length);
 
-  // decode file contents
+  // Decode file contents
   const parts = secrets.split("-");
+  if (parts.length !== 5) {
+    throw new Error(`Encrypted payload invalid. Expected 5 sections but only got ${parts.length}`);
+  }
+
   const rounds = parseInt(Buffer.from(parts[0], "utf8"), 10);
   const keyLength = parseInt(Buffer.from(parts[1], "utf8"), 10);
   const salt = Buffer.from(parts[2], ENCODING);
@@ -69,8 +71,25 @@ function decrypt(secrets) {
   return JSON.parse(decrypted);
 }
 
+/**
+ * Merge the payload object with process.env
+ * @param {Record<string, any>} payload
+ */
+const populateEnv = (payload) => (process.env = { ...process.env, ...payload });
+
+/**
+ * Decrypt secrets and supply a `populateEnv` method for convenience
+ * @param {string} cipherText
+ * @returns {Record<string, any>}
+ */
+function loadSecretsFromCipher(cipherText) {
+  const payload = decrypt(cipherText);
+  return { ...payload, populateEnv: () => populateEnv(payload) };
+}
+
 module.exports = {
   encrypt: encrypt,
   decrypt: decrypt,
   populateEnv: populateEnv,
+  loadSecretsFromCipher: loadSecretsFromCipher,
 };
