@@ -38,6 +38,9 @@ async function build(fetch, options = { path: null }) {
  * @param {{path: string}} [options={ path: null }]
  */
 function encryptToFile(payload, options = { path: null }) {
+  /*
+    REVIEW: Are we still using this function (and `decryptFromFile`) using the JS-import style of getting the secrets to the user?
+  */
   const cipherText = secrets.encrypt(payload);
   const filePath = options.path ? path.resolve(options.path) : DEFAULT_FILE_PATH;
   writeFile(filePath, cipherText);

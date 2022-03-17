@@ -4,6 +4,8 @@ const secrets = require("../src/index");
 
 // eslint-disable-next-line security/detect-non-literal-fs-filename
 const read = (file) => fs.readFileSync(path.resolve(file), { encoding: "utf8" });
+// REVIEW: I think we need this eslint disable (v)
+// eslint-disable-next-line security/detect-non-literal-fs-filename
 const rm = (...files) => files.forEach((file) => fs.unlinkSync(path.resolve(file)));
 
 const PROCESS_ENV = process.env;

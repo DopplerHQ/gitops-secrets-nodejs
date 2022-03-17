@@ -23,6 +23,12 @@ async function fetch() {
         },
         (res) => {
           let secrets = "";
+          /*
+            REVIEW: It looks like the `https` lib doesn't push the error event for non-success status codes:
+            https://stackoverflow.com/questions/23712392/http-get-nodejs-how-to-get-error-status-code
+
+            I think we need to check the status code here (should be 200).
+           */
           res.on("data", (data) => (secrets += data));
           res.on("end", () => {
             resolve(JSON.parse(secrets));
