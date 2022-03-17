@@ -1,30 +1,30 @@
 const fs = require("fs");
 const path = require("path");
-const { log } = require("./utils.js");
 const secrets = require("./secrets.js");
 const DEFAULT_JS_PATH = path.join(__dirname, "../.secrets/.secrets.enc.js");
 const DEFAULT_FILE_PATH = path.join(__dirname, "../.secrets/.secrets.enc.json");
 
 /**
- * Build a JS module for accessing encrypted secrets at runtime to avoid needing direct file system access
- * @param {object} payload
+ * Encapsulate encrypted secrets in a JS module for easy runtime access.
+ * Use {options.path} to output module locally for when package level storage or non-literal imports are disallowed.
+ * @param {() => Promise<Record<string, any>>} fetch
  * @param {{path: string}} [options={path: null}]
  */
-function build(payload, options = { path: null }) {
+async function build(fetch, options = { path: null }) {
+  const payload = await fetch();
   const cipherText = secrets.encrypt(payload);
   const filePath = options.path ? path.resolve(options.path) : DEFAULT_JS_PATH;
   const packageType = process.env.npm_package_type === "module" ? "esm" : "cjs";
   const format = filePath === DEFAULT_JS_PATH ? "cjs" : packageType;
-  let lines = [
-    `const CIPHER_TEXT = "${cipherText}";`,
-    "const loadSecrets = () => { const payload = secrets.decrypt(CIPHER_TEXT); return { ...payload, populateEnv: () => secrets.populateEnv(payload) }; };",
-  ];
+  const importPackage = process.env.VERCEL ? "gitops-secrets/vercel" : "gitops-secrets";
+  let lines = [`const CIPHER_TEXT = "${cipherText}";`, "const loadSecrets = () => secrets.loadSecretsFromCipher(CIPHER_TEXT);"];
+
   switch (format) {
     case "esm":
-      lines = ['import secrets from "gitops-secrets";', ...lines, "export { CIPHER_TEXT, loadSecrets };"];
+      lines = [`import secrets from "${importPackage}";`, ...lines, "export { CIPHER_TEXT, loadSecrets };"];
       break;
     case "cjs":
-      lines = ['const secrets = require("gitops-secrets");', ...lines, "module.exports = { CIPHER_TEXT, loadSecrets };"];
+      lines = [`const secrets = require("${importPackage}");`, ...lines, "module.exports = { CIPHER_TEXT, loadSecrets };"];
       break;
   }
 
@@ -34,7 +34,7 @@ function build(payload, options = { path: null }) {
 
 /**
  * Encrypt JSON-serializable payload to a static file
- * @param {object} payload
+ * @param {Record<string,any>} payload
  * @param {{path: string}} [options={ path: null }]
  */
 function encryptToFile(payload, options = { path: null }) {
@@ -50,14 +50,13 @@ function encryptToFile(payload, options = { path: null }) {
  */
 function decryptFromFile(filePath) {
   filePath = filePath ? path.resolve(filePath) : DEFAULT_FILE_PATH;
-  log(`Reading secrets from ${filePath}`);
 
   try {
     // eslint-disable-next-line security/detect-non-literal-fs-filename
     const payload = secrets.decrypt(fs.readFileSync(filePath, { encoding: "utf-8" }));
     return { ...payload, populateEnv: () => secrets.populateEnv(payload) };
   } catch (error) {
-    throw `Unable to read secrets from ${filePath}: ${error}`;
+    throw new Error(`Unable to read secrets from ${filePath}: ${error}`);
   }
 }
 
@@ -66,7 +65,7 @@ function writeFile(filePath, fileContents) {
     // eslint-disable-next-line security/detect-non-literal-fs-filename
     fs.writeFileSync(filePath, fileContents, { encoding: "utf-8" });
   } catch (error) {
-    throw `Unable to write secrets to ${filePath}: ${error}`;
+    throw new Error(`Unable to write secrets to ${filePath}: ${error}`);
   }
 }
 
