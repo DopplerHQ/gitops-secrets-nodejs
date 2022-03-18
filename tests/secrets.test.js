@@ -16,8 +16,6 @@ const SECRETS = {
   AUTH_TOKEN: "cb71114f-22c3-4a66-af06-39d8d39a2af3",
 };
 
-const SECRETS_FETCH = async () => SECRETS;
-
 test("Fail when process.env.GITOPS_SECRETS_MASTER_KEY is undefined", () => {
   process.env.GITOPS_SECRETS_MASTER_KEY = undefined;
   expect(() => secrets.encrypt(SECRETS)).toThrow();
@@ -35,14 +33,14 @@ test("Encrypt and decrypt in memory", () => {
 });
 
 test("Secrets build", async () => {
-  await secrets.build(SECRETS_FETCH);
+  await secrets.build(SECRETS);
   expect(secrets.loadSecrets()).toHaveProperty(`API_KEY`);
   rm(secrets.DEFAULT_JS_PATH);
 });
 
 test("Secrets build with populateEnv", async () => {
   expect(process.env).not.toHaveProperty(`API_KEY`);
-  await secrets.build(SECRETS_FETCH);
+  await secrets.build(SECRETS);
   const payload = secrets.loadSecrets().populateEnv();
   expect(process.env).toHaveProperty(`API_KEY`);
   expect(payload).not.toHaveProperty(`PATH`);
@@ -51,7 +49,7 @@ test("Secrets build with populateEnv", async () => {
 
 test("Secrets build with a path", async () => {
   const SECRETS_PATH = ".secrets/custom.enc.js";
-  await secrets.build(SECRETS_FETCH, { path: SECRETS_PATH });
+  await secrets.build(SECRETS, { path: SECRETS_PATH });
   // eslint-disable-next-line security/detect-non-literal-require
   expect(require(`../${SECRETS_PATH}`).loadSecrets()).toHaveProperty("API_KEY");
   rm(SECRETS_PATH);
@@ -60,7 +58,7 @@ test("Secrets build with a path", async () => {
 test("Secrets build outputs in CommonJS format, even if project uses modules as require is performed locally", async () => {
   const NPM_PACKAGE_TYPE = process.env.npm_package_type;
   process.env.npm_package_type = "module";
-  await secrets.build(SECRETS_FETCH);
+  await secrets.build(SECRETS);
   expect(read(secrets.DEFAULT_JS_PATH)).toContain("module.exports");
   rm(secrets.DEFAULT_JS_PATH);
   process.env.npm_package_type = NPM_PACKAGE_TYPE;
@@ -70,7 +68,7 @@ test("Secrets build outputs in ES modules format path is provided", async () => 
   const SECRETS_PATH = ".secrets/custom.enc.js";
   const NPM_PACKAGE_TYPE = process.env.npm_package_type;
   process.env.npm_package_type = "module";
-  await secrets.build(SECRETS_FETCH, { path: SECRETS_PATH });
+  await secrets.build(SECRETS, { path: SECRETS_PATH });
   expect(read(SECRETS_PATH)).toContain("export {");
   rm(SECRETS_PATH);
   process.env.npm_package_type = NPM_PACKAGE_TYPE;

@@ -15,11 +15,10 @@ if (!fs.existsSync(SECRETS_FOLDER)) {
 /**
  * Encapsulate encrypted secrets in a JS module for easy runtime access.
  * Use {options.path} to output module locally for when package level storage or non-literal imports are disallowed.
- * @param {() => Promise<Record<string, any>>} fetch
+ * @param {<Record<string, any>} payload
  * @param {{path: string}} [options={path: null}]
  */
-async function build(fetch, options = { path: null }) {
-  const payload = await fetch();
+async function build(payload, options = { path: null }) {
   const cipherText = secrets.encrypt(payload);
   const filePath = options.path ? path.resolve(options.path) : DEFAULT_JS_PATH;
   const packageType = process.env.npm_package_type === "module" ? "esm" : "cjs";
