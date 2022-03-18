@@ -75,7 +75,10 @@ function decrypt(secrets) {
  * Merge the payload object with process.env
  * @param {Record<string, any>} payload
  */
-const populateEnv = (payload) => (process.env = { ...process.env, ...payload });
+function populateEnv(payload) {
+  process.env = { ...process.env, ...payload };
+  return payload;
+}
 
 /**
  * Decrypt secrets and supply a `populateEnv` method for convenience
