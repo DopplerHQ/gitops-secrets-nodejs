@@ -5,12 +5,12 @@
   "description": "GitOps encrypted secrets workflow",
   "repository": {
     "type": "git",
-    "url": "https://github.com/doppler-university/gitops-secrets.git"
+    "url": "https://github.com/DopplerUniversity/gitops-secrets-nodejs.git"
   },
-  "homepage": "https://github.com/doppler-university/gitops-secrets#readme",
+  "homepage": "https://github.com/DopplerUniversity/gitops-secrets-nodejs#readme",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/axios/axios/issues"
+    "url": "https://github.com/DopplerUniversity/gitops-secrets-nodejs/issues"
   },
   "keywords": [
     "dotenv",

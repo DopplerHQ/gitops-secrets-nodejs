@@ -2,15 +2,11 @@ name: publish
 
 on:
   release:
-    types: [published]
-  workflow_run:
-    workflows: ["test"]
-    branches: [main]
-    types:
-      - completed
+    types: [created]
 
 jobs:
   publish:
+    if: github.ref == 'refs/heads/main'
     needs: test
     runs-on: ubuntu-latest
     steps:
@@ -19,6 +15,7 @@ jobs:
         with:
           node-version: 12
           registry-url: https://registry.npmjs.org/
+
       - run: echo "Releasing $(jq  -r '.version' package.json)"
       - run: npm publish --ignore-scripts
         env:
