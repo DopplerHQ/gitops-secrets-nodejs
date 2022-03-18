@@ -8,8 +8,11 @@ const read = (file) => fs.readFileSync(path.resolve(file), { encoding: "utf8" })
 const rm = (...files) => files.forEach((file) => fs.unlinkSync(path.resolve(file)));
 
 const PROCESS_ENV = process.env;
+const NPM_PACKAGE_TYPE = process.env.npm_package_type;
 const GITOPS_SECRETS_MASTER_KEY = "1e18cc54-1d77-45a1-ae46-fecebce35ae2";
-beforeEach(() => (process.env = { ...PROCESS_ENV, GITOPS_SECRETS_MASTER_KEY: GITOPS_SECRETS_MASTER_KEY }));
+beforeEach(() => {
+  process.env = { ...PROCESS_ENV, GITOPS_SECRETS_MASTER_KEY: GITOPS_SECRETS_MASTER_KEY, npm_package_type: NPM_PACKAGE_TYPE };
+});
 
 const SECRETS = {
   API_KEY: "46f181e0-d68c-49d2-aa4c-1dd30d954877",
@@ -56,12 +59,10 @@ test("Secrets build with a path", async () => {
 });
 
 test("Secrets build outputs in CommonJS format, even if project uses modules as require is performed locally", async () => {
-  const NPM_PACKAGE_TYPE = process.env.npm_package_type;
   process.env.npm_package_type = "module";
   await secrets.build(SECRETS);
   expect(read(secrets.DEFAULT_JS_PATH)).toContain("module.exports");
   rm(secrets.DEFAULT_JS_PATH);
-  process.env.npm_package_type = NPM_PACKAGE_TYPE;
 });
 
 test("Secrets build outputs in ES modules format path is provided", async () => {
@@ -71,6 +72,21 @@ test("Secrets build outputs in ES modules format path is provided", async () => 
   await secrets.build(SECRETS, { path: SECRETS_PATH });
   expect(read(SECRETS_PATH)).toContain("export {");
   rm(SECRETS_PATH);
+  process.env.npm_package_type = NPM_PACKAGE_TYPE;
+});
+
+test("Secrets build only exports CIPHER_TEXT if options.cipherTextOnly is true for CommonJS", async () => {
+  await secrets.build(SECRETS, { cipherTextOnly: true });
+  expect(read(secrets.DEFAULT_JS_PATH)).not.toContain("loadSecrets");
+  rm(secrets.DEFAULT_JS_PATH);
+  process.env.npm_package_type = NPM_PACKAGE_TYPE;
+});
+
+test("Secrets build only exports CIPHER_TEXT if options.cipherTextOnly is true for ES modules", async () => {
+  process.env.npm_package_type = "module";
+  await secrets.build(SECRETS, { cipherTextOnly: true });
+  expect(read(secrets.DEFAULT_JS_PATH)).not.toContain("loadSecrets");
+  rm(secrets.DEFAULT_JS_PATH);
   process.env.npm_package_type = NPM_PACKAGE_TYPE;
 });
 
