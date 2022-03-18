@@ -44,8 +44,9 @@ test("Secrets build", async () => {
 test("Secrets build with populateEnv", async () => {
   expect(process.env).not.toHaveProperty(`API_KEY`);
   await secrets.build(SECRETS);
-  secrets.loadSecrets().populateEnv();
+  const payload = secrets.loadSecrets().populateEnv();
   expect(process.env).toHaveProperty(`API_KEY`);
+  expect(payload).not.toHaveProperty(`PATH`);
   rm(secrets.DEFAULT_JS_PATH);
 });
 
