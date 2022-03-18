@@ -28,8 +28,13 @@ async function fetch() {
             if (res.statusCode === 200) {
               resolve(JSON.parse(payload));
             } else {
-              const error = JSON.parse(payload).messages.join(" ");
-              reject(new Error(`Doppler API Error: ${error}`));
+              // In the event an upstream issue occurs and no JSON payload is supplied
+              try {
+                const error = JSON.parse(payload).messages.join(" ");
+                reject(new Error(`Doppler API Error: ${error}`));
+              } catch (error) {
+                reject(new Error(`Doppler API Error: ${res.statusCode} ${res.statusMessage}`));
+              }
             }
           });
         }
