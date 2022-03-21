@@ -24,7 +24,7 @@ The default 1,000,000 rounds of key-stretching and key length of 32 bytes should
 
 ## Providers
 
-Providers are strongly encouraged to require auth related secrets to be supplied as environment variables to strongly discourage the hard-coding of credentials.]
+Providers are strongly encouraged to require auth related secrets to be supplied as environment variables to strongly discourage the hard-coding of credentials.
 
 ## Reporting a Vulnerability
 
