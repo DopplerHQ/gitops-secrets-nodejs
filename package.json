@@ -31,9 +31,9 @@
       "require": "./src/index.js",
       "import": "./src/index.js"
     },
-    "./vercel": {
-      "require": "./src/vercel.js",
-      "import": "./src/vercel.js"
+    "./no-fs": {
+      "require": "./src/no-fs.js",
+      "import": "./src/no-fs.js"
     }
   },
   "scripts": {
@@ -54,6 +54,7 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-security": "^1.4.0",
     "jest": "^27.5.1",
+    "jest-node-exports-resolver": "^1.1.5",
     "prettier": "^2.5.1"
   },
   "license": "MIT"
