@@ -29,6 +29,7 @@ main();
 ```
 
 ```js
+// package.json
 {
   "scripts: {
     ...
