@@ -13,12 +13,12 @@ npm run lint
 
 ## Commit Messages
 
-Commit messages should be verb based, using the following pattern:
+Commit messages should be verb based in the present tense, using the following pattern:
 
-- `Fixing ...`
-- `Adding ...`
-- `Updating ...`
-- `Removing ...`
+- `Fixes ...`
+- `Addresses ...`
+- `Updates ...`
+- `Removes ...`
 
 ### Testing
 
