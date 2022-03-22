@@ -9,15 +9,19 @@ const rm = (...files) => files.forEach((file) => fs.unlinkSync(path.resolve(file
 
 const PROCESS_ENV = process.env;
 const NPM_PACKAGE_TYPE = process.env.npm_package_type;
-const GITOPS_SECRETS_MASTER_KEY = "1e18cc54-1d77-45a1-ae46-fecebce35ae2";
-beforeEach(() => {
-  process.env = { ...PROCESS_ENV, GITOPS_SECRETS_MASTER_KEY: GITOPS_SECRETS_MASTER_KEY, npm_package_type: NPM_PACKAGE_TYPE };
-});
 
+const GITOPS_SECRETS_MASTER_KEY = "1e18cc54-1d77-45a1-ae46-fecebce35ae2";
 const SECRETS = {
   API_KEY: "46f181e0-d68c-49d2-aa4c-1dd30d954877",
   AUTH_TOKEN: "cb71114f-22c3-4a66-af06-39d8d39a2af3",
 };
+// Previously encrypted CIPHER of the SECRETS object for testing decryption backwards compatibility
+const SECRETS_CIPHER =
+  "base64:1000000:6Mb/k90J0ts=:ckoXxlCYKWPdpeQx:g+vDP451CfU8lJeqZfKl9rzGuZZppQk50espQMI+VR59zz/JHwMjdEIYMMzZD/zcm0vmri1AzMan4J4lQmcIJSsAKtkRtvqX0Je5RxBIrRJD5gDoz3SH4B7qm78Rb2h9FTiZU+MD1am+Pwc5cEw88X4l+46OOg==";
+
+beforeEach(() => {
+  process.env = { ...PROCESS_ENV, GITOPS_SECRETS_MASTER_KEY: GITOPS_SECRETS_MASTER_KEY, npm_package_type: NPM_PACKAGE_TYPE };
+});
 
 test("Fail when process.env.GITOPS_SECRETS_MASTER_KEY is undefined", () => {
   process.env.GITOPS_SECRETS_MASTER_KEY = undefined;
@@ -33,6 +37,10 @@ test("Fail when process.env.GITOPS_SECRETS_MASTER_KEY is less than 16 chars", ()
 
 test("Encrypt and decrypt in memory", () => {
   expect(secrets.decrypt(secrets.encrypt(SECRETS))).toHaveProperty("API_KEY");
+});
+
+test("Ensure decryption backwards compatibility", () => {
+  expect(secrets.decrypt(SECRETS_CIPHER)).toHaveProperty("API_KEY");
 });
 
 test("Secrets build", async () => {
