@@ -20,7 +20,9 @@ node -e 'process.stdout.write(require("crypto").randomBytes(16).toString("hex"))
 
 ## Encryption and Decryption
 
-The default 1,000,000 rounds of key-stretching and key length of 32 bytes should be more than sufficient, but can be configured via the `PBKDF2_ROUNDS` and `PBKDF2_KEYLEN` environment variables. These environment variables aren't needed at time of decryption as they are encoded into the final cipher text payload so they can be derived without risk of mismatching values which would prevent decryption.
+The default 1,000,000 rounds of key-stretching should be more than sufficient, but can be configured via the `PBKDF2_ROUNDS` environment variable.
+
+Note that the `PBKDF2_ROUNDS` environment variable is **not** needed at time of decryption as it is encoded into the final cipher text payload so it can be derived without risk of mismatched values which would prevent decryption.
 
 ## Providers
 
