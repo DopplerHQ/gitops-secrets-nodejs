@@ -2,13 +2,13 @@
   "name": "gitops-secrets",
   "version": "0.0.1",
   "author": "Ryan Blunden <ryan.blunden@doppler.com>",
-  "description": "GitOps encrypted secrets workflow",
+  "description": "Securely bundle encrypted secrets into your deployments and safely decrypt at runtime.",
   "repository": {
     "type": "git",
     "url": "https://github.com/DopplerUniversity/gitops-secrets-nodejs.git"
   },
   "homepage": "https://github.com/DopplerUniversity/gitops-secrets-nodejs#readme",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/DopplerUniversity/gitops-secrets-nodejs/issues"
   },
