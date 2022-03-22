@@ -23,5 +23,3 @@ scanner_configs:
         forbidden: true
         exclude:
           - node_modules
-          - bower_components
-          - external-src
