@@ -48,17 +48,17 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@babel/core": "^7.17.5",
+    "@babel/core": "^7.17.8",
     "@babel/eslint-parser": "^7.17.0",
     "@babel/preset-env": "^7.16.11",
     "@jest/globals": "^27.5.1",
     "babel-jest": "^27.5.1",
-    "eslint": "^8.9.0",
+    "eslint": "^8.11.0",
     "eslint-plugin-import": "^2.25.4",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-security": "^1.4.0",
     "jest": "^27.5.1",
     "jest-node-exports-resolver": "^1.1.5",
-    "prettier": "^2.5.1"
+    "prettier": "^2.6.0"
   }
 }
