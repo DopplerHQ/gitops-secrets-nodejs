@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const secrets = require("../src/index");
+const secretsNofs = require("../src/no-fs");
 
 // eslint-disable-next-line security/detect-non-literal-fs-filename
 const read = (file) => fs.readFileSync(path.resolve(file), { encoding: "utf8" });
@@ -41,6 +42,18 @@ test("Encrypt and decrypt in memory", () => {
 
 test("Ensure decryption backwards compatibility", () => {
   expect(secrets.decrypt(SECRETS_CIPHER)).toHaveProperty("API_KEY");
+});
+
+test("Import secrets from ./no-fs sub-path has complete secrets API", () => {
+  expect(secretsNofs.decrypt(secretsNofs.encrypt(SECRETS))).toHaveProperty("API_KEY");
+  expect(secretsNofs.loadSecretsFromCipher(SECRETS_CIPHER)).toHaveProperty("API_KEY");
+  expect(process.env).not.toHaveProperty(`API_KEY`);
+  secretsNofs.populateEnv(secretsNofs.decrypt(SECRETS_CIPHER));
+  expect(process.env).toHaveProperty(`API_KEY`);
+});
+
+test("Import secrets from ./no-fs sub-path does not contain secret-files exports", () => {
+  Object.keys(require("../src/secrets-files")).forEach((exp) => expect(secretsNofs).not.toHaveProperty(exp));
 });
 
 test("Secrets build", async () => {
