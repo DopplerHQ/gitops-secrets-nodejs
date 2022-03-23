@@ -11,7 +11,7 @@ A GitOps Secrets workflow eliminates environment variable limits without insecur
 1. Install the GitOps Secrets package (currently in developer preview):
 
 ```sh
-npm install git+https://github.com/DopplerUniversity/gitops-secrets-nodejs.git
+npm install git+https://github.com/DopplerHQ/gitops-secrets-nodejs.git
 ```
 
 2. Bundle encrypted secrets into your build
@@ -171,6 +171,6 @@ Take a look at the [Vercel GitOps Secrets Next.js sample repository](https://git
 
 As this package is still in developer preview, a huge contribution you can make is simply testing this with your preferred framework and serverless provider as we'd love your feedback!
 
-You can get support in the [Doppler community forum](https://community.doppler.com/), find us on [Twitter](https://twitter.com/doppler), and for bugs or feature requests, [create an issue](https://github.com/DopplerUniversity/gitops-secrets-nodejs/issues) on this repository.
+You can get support in the [Doppler community forum](https://community.doppler.com/), find us on [Twitter](https://twitter.com/doppler), and for bugs or feature requests, [create an issue](https://github.com/DopplerHQ/gitops-secrets-nodejs/issues) on this repository.
 
 We'd also love to see the number of providers grow and you can check out our [contributing guide](CONTRIBUTING.md) to get started.
