@@ -1,6 +1,6 @@
 {
   "name": "gitops-secrets",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": "Ryan Blunden <ryan.blunden@doppler.com>",
   "description": "Securely bundle encrypted secrets into your deployments and safely decrypt at runtime.",
   "repository": {
