@@ -2,12 +2,10 @@ name: publish
 
 on:
   release:
-    types: [created]
+    types: [published]
 
 jobs:
   publish:
-    if: github.ref == 'refs/heads/main'
-    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master

@@ -11,7 +11,7 @@ A GitOps Secrets workflow eliminates environment variable limits without insecur
 1. Install the GitOps Secrets package (currently in developer preview):
 
 ```sh
-npm install git+https://github.com/DopplerHQ/gitops-secrets-nodejs.git
+npm install gitops-secrets
 ```
 
 2. Bundle encrypted secrets into your build
