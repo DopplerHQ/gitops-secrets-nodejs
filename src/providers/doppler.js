@@ -13,12 +13,14 @@ async function fetch() {
   return new Promise(function (resolve, reject) {
     const encodedAuthData = Buffer.from(`${process.env.DOPPLER_TOKEN}:`).toString("base64");
     const authHeader = `Basic ${encodedAuthData}`;
+    const userAgent = `gitops-secrets-nodejs`;
     https
       .get(
         "https://api.doppler.com/v3/configs/config/secrets/download?format=json",
         {
           headers: {
             Authorization: authHeader,
+            "user-agent": userAgent,
           },
         },
         (res) => {
