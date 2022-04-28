@@ -1,5 +1,5 @@
 const https = require("https");
-
+const { VERSION } = require("../meta");
 /**
  * Fetch secrets from Doppler the API.
  * Requires the `DOPPLER_TOKEN` environment variable to be set. See https://docs.doppler.com/docs/enclave-service-tokens
@@ -13,7 +13,7 @@ async function fetch() {
   return new Promise(function (resolve, reject) {
     const encodedAuthData = Buffer.from(`${process.env.DOPPLER_TOKEN}:`).toString("base64");
     const authHeader = `Basic ${encodedAuthData}`;
-    const userAgent = `gitops-secrets-nodejs`;
+    const userAgent = `gitops-secrets-nodejs/${VERSION}`;
     https
       .get(
         "https://api.doppler.com/v3/configs/config/secrets/download?format=json",
