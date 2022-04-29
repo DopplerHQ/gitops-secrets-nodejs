@@ -14,7 +14,6 @@ jobs:
           node-version: 16
           registry-url: https://registry.npmjs.org/
 
-      - run: sed -i "s/development/$(jq  -r '.version' package.json)/" src/meta.js
       - run: echo "Releasing $(jq  -r '.version' package.json)"
       - run: npm publish --ignore-scripts
         env:
