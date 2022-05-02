@@ -1,4 +1,4 @@
-# GitOps Secrets for Node.js
+# GitOps Secrets
 
 Hello, GitOps Secrets! Goodbye environment variable storage limits.
 
