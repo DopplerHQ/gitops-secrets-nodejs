@@ -8,7 +8,7 @@ const read = (file) => fs.readFileSync(path.resolve(file), { encoding: "utf8" })
 // eslint-disable-next-line security/detect-non-literal-fs-filename
 const rm = (...files) => files.forEach((file) => fs.unlinkSync(path.resolve(file)));
 
-const PROCESS_ENV = process.env;
+const PROCESS_ENV = { ...process.env };
 const NPM_PACKAGE_TYPE = process.env.npm_package_type;
 
 const GITOPS_SECRETS_MASTER_KEY = "1e18cc54-1d77-45a1-ae46-fecebce35ae2";
