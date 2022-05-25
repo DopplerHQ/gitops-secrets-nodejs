@@ -45,11 +45,11 @@ const secrets = loadSecrets();
 
 ## Background and Motivation
 
-Exceeding AWS Lambda's 4KB environment variable limit is a common problem that also impacts platforms such as [Vercel](https://vercel.com/support/articles/how-do-i-workaround-vercel-s-4-kb-environment-variables-limit) and the [Serverless framework](https://www.serverless.com/framework/docs/providers/aws/guide/variables) who deploy on top of AWS Lambda.
+Exceeding AWS Lambda's 4KB environment variable limit is a common problem that also impacts platforms such as [Vercel](https://vercel.com/support/articles/how-do-i-workaround-vercel-s-4-kb-environment-variables-limit) and the [Serverless framework](https://www.serverless.com/framework/docs/providers/aws/guide/variables) which deploy on top of AWS Lambda.
 
 A SecretOps workflow that bundles encrypted secrets into a deployment eliminates such environment variable limits without insecure hacks such as storing unencrypted .env files in your builds.
 
-As creators of the [Doppler SecretOps Platform](https://www.doppler.com/) who provide secrets sync integrations for [Vercel](https://vercel.com/integrations/doppler) and [Serverless](https://docs.doppler.com/docs/enclave-installation-serverless), we built this to provide a secure solution for our customers and the open source community.
+As creators of the [Doppler SecretOps Platform](https://www.doppler.com/) which provide secrets sync integrations for [Vercel](https://vercel.com/integrations/doppler) and [Serverless](https://docs.doppler.com/docs/enclave-installation-serverless), we built this to provide a secure solution for our customers and the open source community.
 
 Our goal was to design a new way of accessing secrets in production that:
 
