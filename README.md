@@ -154,12 +154,16 @@ secrets.populateEnv();
 
 Or use the `loadSecrets` method from the generated module (ES modules also supported):
 
-```js
-const { loadSecrets } = require("../lib/secrets");
+```ts
+const { loadSecrets, Convert, Configuration } = require("../lib/secrets");
 const secrets = loadSecrets();
 
+// Optionally export type safe object
+const { populateEnv, ...config } = secrets;
+export const configuration = Convert.toConfiguration(config);
+
 // Optionally merge secrets into environment variables
-secrets.populateEnv();
+secrets.populateEnv(); // or populateEnv()
 ```
 
 ## Getting Started

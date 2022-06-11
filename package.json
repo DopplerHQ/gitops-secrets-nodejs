@@ -47,7 +47,9 @@
     "prettier-check": "prettier --check .",
     "prepublishOnly": "sed -i \"s/development/$npm_package_version/\" src/meta.js"
   },
-  "dependencies": {},
+  "dependencies": {
+    "quicktype-core": "^6.0.71"
+  },
   "devDependencies": {
     "@babel/core": "^7.17.8",
     "@babel/eslint-parser": "^7.17.0",

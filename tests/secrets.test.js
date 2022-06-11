@@ -96,6 +96,27 @@ test("Secrets build outputs in ES modules format path is provided", async () => 
   process.env.npm_package_type = NPM_PACKAGE_TYPE;
 });
 
+test("Secrets build outputs in ES modules format path if a typescript file is provided for the path", async () => {
+  const SECRETS_PATH = ".secrets/custom.enc.ts";
+  await secrets.build(SECRETS, { path: SECRETS_PATH });
+  const readFile = read(SECRETS_PATH);
+  expect(readFile).toContain("export {");
+  expect(readFile).toContain("export interface Configuration {");
+  rm(SECRETS_PATH);
+});
+
+test("Secrets build outputs in ES modules format path is provided and includes type definition", async () => {
+  const SECRETS_PATH = ".secrets/custom.enc.ts";
+  const NPM_PACKAGE_TYPE = process.env.npm_package_type;
+  process.env.npm_package_type = "module";
+  await secrets.build(SECRETS, { path: SECRETS_PATH });
+  const readFile = read(SECRETS_PATH);
+  expect(readFile).toContain("export {");
+  expect(readFile).toContain("export interface Configuration {");
+  rm(SECRETS_PATH);
+  process.env.npm_package_type = NPM_PACKAGE_TYPE;
+});
+
 test("Secrets build only exports CIPHER_TEXT if options.cipherTextOnly is true for CommonJS", async () => {
   await secrets.build(SECRETS, { cipherTextOnly: true });
   expect(read(secrets.DEFAULT_JS_PATH)).not.toContain("loadSecrets");
