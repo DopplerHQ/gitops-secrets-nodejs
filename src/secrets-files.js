@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const { jsonInputForTargetLanguage, InputData, quicktype } = require("quicktype-core");
 const secrets = require("./secrets.js");
 
 const SECRETS_FOLDER = path.join(__dirname, "../.secrets");
