@@ -49,6 +49,7 @@ async function build(payload, options = { path: null, cipherTextOnly: false }) {
   }
 
   if (format === "cjs") {
+  if (format === "cjs" && !typescript) {
     if (!options.cipherTextOnly) {
       lines = [
         ...lines,

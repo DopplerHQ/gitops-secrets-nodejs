@@ -102,6 +102,7 @@ test("Secrets build outputs in ES modules format path if a typescript file is pr
   const readFile = read(SECRETS_PATH);
   expect(readFile).toContain("export {");
   expect(readFile).toContain("export interface Configuration {");
+  expect(readFile).not.toContain("secrets = require(\"gitops-secrets/no-fs");
   rm(SECRETS_PATH);
 });
 
@@ -113,6 +114,7 @@ test("Secrets build outputs in ES modules format path is provided and includes t
   const readFile = read(SECRETS_PATH);
   expect(readFile).toContain("export {");
   expect(readFile).toContain("export interface Configuration {");
+  expect(readFile).not.toContain("secrets = require(\"gitops-secrets/no-fs");
   rm(SECRETS_PATH);
   process.env.npm_package_type = NPM_PACKAGE_TYPE;
 });
