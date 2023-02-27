@@ -11,6 +11,7 @@ const rm = (...files) => files.forEach((file) => fs.unlinkSync(path.resolve(file
 const PROCESS_ENV = { ...process.env };
 const NPM_PACKAGE_TYPE = process.env.npm_package_type;
 
+// NOTE: these test values are not sensitive
 const GITOPS_SECRETS_MASTER_KEY = "1e18cc54-1d77-45a1-ae46-fecebce35ae2";
 const SECRETS = {
   API_KEY: "46f181e0-d68c-49d2-aa4c-1dd30d954877",
