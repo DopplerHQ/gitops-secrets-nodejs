@@ -6,7 +6,7 @@ A SecretOps workflow for bundling encrypted secrets into your deployments.
 
 ## Usage
 
-1. Install the `gitops-secretes` package:
+1. Install the `gitops-secrets` package:
 
 ```sh
 npm install gitops-secrets
