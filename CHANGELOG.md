@@ -15,3 +15,7 @@
 ## 0.0.5 (May 25, 2022)
 
 - Enable Doppler Service Token to be passed as a parameter to the Doppler provider
+
+## 0.0.6 (July 25, 2023)
+
+- Enable Doppler Project and Doppler Config to be passed as a parameter to the Doppler provider
