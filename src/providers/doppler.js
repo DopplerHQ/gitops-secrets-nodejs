@@ -12,8 +12,7 @@ async function fetch({ dopplerToken = process.env.DOPPLER_TOKEN } = {}) {
   }
 
   return new Promise(function (resolve, reject) {
-    const encodedAuthData = Buffer.from(`${dopplerToken}:`).toString("base64");
-    const authHeader = `Basic ${encodedAuthData}`;
+    const authHeader = `Bearer ${dopplerToken}`;
     const userAgent = `gitops-secrets-nodejs/${VERSION}`;
     https
       .get(
